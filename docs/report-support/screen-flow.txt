@@ -1,0 +1,7 @@
+Pantry Home
+  -> Add Ingredient
+  -> Pantry saved -> Pantry Home
+  -> Suggested Recipes
+      -> Recipe Detail
+  -> Settings
+  -> Reload recipes
