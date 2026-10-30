@@ -66,32 +66,32 @@ public class RecipeMatchingServiceTest {
     public void multipleRecipesAreFilteredCorrectly() {
         Recipe eligible = recipeWithIngredients("egg", 2, "pcs", "tomato", 2, "pcs");
         Recipe excluded = recipeWithIngredients("egg", 3, "pcs", "milk", 250, "ml");
-        List<PantryItem> pantry = pantryWithItems("egg", 3, "pcs", "tomato", 1, "pcs");
+        List<PantryItem> pantry = pantryWithItems("egg", 3, "pcs", "tomato", 2, "pcs");
         assertTrue(RecipeMatchingService.isRecipeEligible(eligible, pantry));
         assertFalse(RecipeMatchingService.isRecipeEligible(excluded, pantry));
     }
 
-    private Recipe recipeWithIngredients(String... ingredients) {
+    private Recipe recipeWithIngredients(Object... ingredients) {
         Recipe recipe = new Recipe();
         recipe.setIngredients(new ArrayList<>());
         for (int i = 0; i < ingredients.length; i += 3) {
             RecipeIngredient ingredient = new RecipeIngredient();
-            ingredient.setIngredientName(ingredients[i]);
-            ingredient.setQuantity(Double.parseDouble(ingredients[i + 1]));
-            ingredient.setUnit(ingredients[i + 2]);
+            ingredient.setIngredientName(String.valueOf(ingredients[i]));
+            ingredient.setQuantity(Double.parseDouble(String.valueOf(ingredients[i + 1])));
+            ingredient.setUnit(String.valueOf(ingredients[i + 2]));
             recipe.getIngredients().add(ingredient);
         }
         return recipe;
     }
 
-    private List<PantryItem> pantryWithItems(String... ingredients) {
+    private List<PantryItem> pantryWithItems(Object... ingredients) {
         List<PantryItem> pantry = new ArrayList<>();
         for (int i = 0; i < ingredients.length; i += 3) {
             PantryItem item = new PantryItem();
-            item.setName(ingredients[i]);
-            item.setDisplayName(ingredients[i]);
-            item.setQuantity(Double.parseDouble(ingredients[i + 1]));
-            item.setUnit(ingredients[i + 2]);
+            item.setName(String.valueOf(ingredients[i]));
+            item.setDisplayName(String.valueOf(ingredients[i]));
+            item.setQuantity(Double.parseDouble(String.valueOf(ingredients[i + 1])));
+            item.setUnit(String.valueOf(ingredients[i + 2]));
             pantry.add(item);
         }
         return pantry;
