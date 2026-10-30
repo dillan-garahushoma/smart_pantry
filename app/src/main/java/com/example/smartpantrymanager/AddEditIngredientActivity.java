@@ -120,7 +120,7 @@ public class AddEditIngredientActivity extends AppCompatActivity {
             valid = false;
         }
 
-        double quantityValue;
+        double quantityValue = 0;
         try {
             quantityValue = Double.parseDouble(quantityText);
             if (quantityValue <= 0) {
