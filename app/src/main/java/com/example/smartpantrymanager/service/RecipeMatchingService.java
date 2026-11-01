@@ -18,7 +18,8 @@ public class RecipeMatchingService {
     private static final Map<String, String> CANONICAL_ALIASES = new HashMap<>();
 
     static {
-        Collections.addAll(COUNT_UNITS, "pcs", "pc", "piece", "pieces", "count", "whole", "wholeitem", "egg", "eggs", "slice", "slices", "clove", "cloves", "bunch", "bunches");
+        Collections.addAll(COUNT_UNITS, "pcs", "pc", "piece", "pieces", "count", "item", "items",
+                "whole", "wholeitem", "egg", "eggs", "slice", "slices", "clove", "cloves", "bunch", "bunches");
 
         CANONICAL_ALIASES.put("tomato", "tomato");
         CANONICAL_ALIASES.put("tomatoes", "tomato");
@@ -34,6 +35,8 @@ public class RecipeMatchingService {
         CANONICAL_ALIASES.put("spinach", "spinach");
         CANONICAL_ALIASES.put("pepper", "pepper");
         CANONICAL_ALIASES.put("peppers", "pepper");
+        CANONICAL_ALIASES.put("bell pepper", "pepper");
+        CANONICAL_ALIASES.put("bell peppers", "pepper");
         CANONICAL_ALIASES.put("chilies", "chili");
         CANONICAL_ALIASES.put("chili", "chili");
         CANONICAL_ALIASES.put("chilli", "chili");
@@ -49,28 +52,132 @@ public class RecipeMatchingService {
         CANONICAL_ALIASES.put("cheese", "cheese");
         CANONICAL_ALIASES.put("butter", "butter");
         CANONICAL_ALIASES.put("olive oil", "olive oil");
-        CANONICAL_ALIASES.put("oil", "oil");
+        CANONICAL_ALIASES.put("oil", "olive oil");
         CANONICAL_ALIASES.put("salt", "salt");
         CANONICAL_ALIASES.put("peppercorns", "pepper");
+        CANONICAL_ALIASES.put("yogurt", "yogurt");
+        CANONICAL_ALIASES.put("banana", "banana");
+        CANONICAL_ALIASES.put("bananas", "banana");
     }
 
+    /**
+     * Evaluation result for a single recipe matching against pantry.
+     */
+    public static class RecipeMatchResult {
+        private final Recipe recipe;
+        private final int totalRequired;
+        private final int matchedCount;
+        private final List<RecipeIngredient> missingIngredients;
+        private final List<RecipeIngredient> satisfiedIngredients;
+
+        public RecipeMatchResult(Recipe recipe, int totalRequired, int matchedCount,
+                                 List<RecipeIngredient> missingIngredients,
+                                 List<RecipeIngredient> satisfiedIngredients) {
+            this.recipe = recipe;
+            this.totalRequired = totalRequired;
+            this.matchedCount = matchedCount;
+            this.missingIngredients = missingIngredients;
+            this.satisfiedIngredients = satisfiedIngredients;
+        }
+
+        public Recipe getRecipe() {
+            return recipe;
+        }
+
+        public int getTotalRequired() {
+            return totalRequired;
+        }
+
+        public int getMatchedCount() {
+            return matchedCount;
+        }
+
+        public List<RecipeIngredient> getMissingIngredients() {
+            return missingIngredients;
+        }
+
+        public List<RecipeIngredient> getSatisfiedIngredients() {
+            return satisfiedIngredients;
+        }
+
+        public boolean isStrictMatch() {
+            return missingIngredients.isEmpty() && totalRequired > 0;
+        }
+
+        public boolean isAlmostThere() {
+            return missingIngredients.size() == 1;
+        }
+
+        public String getMatchBadgeText() {
+            if (isStrictMatch()) {
+                return "Ready to cook";
+            } else if (isAlmostThere()) {
+                RecipeIngredient missing = missingIngredients.get(0);
+                return "Missing: " + missing.getIngredientName();
+            } else {
+                return matchedCount + "/" + totalRequired + " in pantry";
+            }
+        }
+    }
+
+    /**
+     * Strict matching (Section 2.3): Only recipes where 100% of ingredients are in pantry with sufficient quantity.
+     */
     public static List<Recipe> getEligibleRecipes(List<Recipe> recipes, List<PantryItem> pantryItems) {
         if (recipes == null) {
             return new ArrayList<>();
         }
         List<Recipe> eligible = new ArrayList<>();
         for (Recipe recipe : recipes) {
-            if (isRecipeEligible(recipe, pantryItems)) {
+            RecipeMatchResult result = evaluateRecipe(recipe, pantryItems);
+            if (result.isStrictMatch()) {
                 eligible.add(recipe);
             }
         }
         return eligible;
     }
 
-    public static boolean isRecipeEligible(Recipe recipe, List<PantryItem> pantryItems) {
-        if (recipe == null || recipe.getIngredients() == null || recipe.getIngredients().isEmpty()) {
-            return false;
+    /**
+     * Almost-There matching (Section 2.3 & 8 bonus stretch): Recipes missing exactly 1 ingredient.
+     */
+    public static List<RecipeMatchResult> getAlmostThereMatches(List<Recipe> recipes, List<PantryItem> pantryItems) {
+        if (recipes == null) {
+            return new ArrayList<>();
         }
+        List<RecipeMatchResult> almostThere = new ArrayList<>();
+        for (Recipe recipe : recipes) {
+            RecipeMatchResult result = evaluateRecipe(recipe, pantryItems);
+            if (result.isAlmostThere()) {
+                almostThere.add(result);
+            }
+        }
+        return almostThere;
+    }
+
+    /**
+     * Evaluates all recipes with their detailed matching metrics.
+     */
+    public static List<RecipeMatchResult> getAllRecipeMatches(List<Recipe> recipes, List<PantryItem> pantryItems) {
+        if (recipes == null) {
+            return new ArrayList<>();
+        }
+        List<RecipeMatchResult> results = new ArrayList<>();
+        for (Recipe recipe : recipes) {
+            results.add(evaluateRecipe(recipe, pantryItems));
+        }
+        return results;
+    }
+
+    public static boolean isRecipeEligible(Recipe recipe, List<PantryItem> pantryItems) {
+        RecipeMatchResult result = evaluateRecipe(recipe, pantryItems);
+        return result.isStrictMatch();
+    }
+
+    public static RecipeMatchResult evaluateRecipe(Recipe recipe, List<PantryItem> pantryItems) {
+        if (recipe == null || recipe.getIngredients() == null || recipe.getIngredients().isEmpty()) {
+            return new RecipeMatchResult(recipe, 0, 0, new ArrayList<>(), new ArrayList<>());
+        }
+
         Map<String, PantryItem> pantryMap = new HashMap<>();
         if (pantryItems != null) {
             for (PantryItem pantryItem : pantryItems) {
@@ -82,20 +189,23 @@ public class RecipeMatchingService {
             }
         }
 
+        List<RecipeIngredient> missing = new ArrayList<>();
+        List<RecipeIngredient> satisfied = new ArrayList<>();
+
         for (RecipeIngredient required : recipe.getIngredients()) {
             if (required == null || required.getIngredientName() == null || required.getIngredientName().trim().isEmpty()) {
-                return false;
+                continue;
             }
             String requiredKey = normalizeIngredientName(required.getIngredientName());
             PantryItem item = pantryMap.get(requiredKey);
-            if (item == null) {
-                return false;
-            }
-            if (!hasSufficientQuantity(required, item)) {
-                return false;
+            if (item != null && hasSufficientQuantity(required, item)) {
+                satisfied.add(required);
+            } else {
+                missing.add(required);
             }
         }
-        return true;
+
+        return new RecipeMatchResult(recipe, recipe.getIngredients().size(), satisfied.size(), missing, satisfied);
     }
 
     public static String normalizeIngredientName(String rawName) {
@@ -140,6 +250,20 @@ public class RecipeMatchingService {
         if (requiredQty <= 0 || availableQty <= 0) {
             return false;
         }
+
+        String ingredientName = normalizeIngredientName(required.getIngredientName());
+
+        // Smart cross-unit bridge for realistic user inputs (e.g. egg entered in grams vs count)
+        if (ingredientName.equals("egg") && !areUnitsCompatible(requiredUnit, availableUnit)) {
+            if (COUNT_UNITS.contains(requiredUnit) && availableUnit.equals("g")) {
+                // 1 egg ~ 50g average weight
+                double eggsAvailable = availableQty / 50.0;
+                return eggsAvailable >= (requiredQty * 0.8); // allow reasonable leeway
+            } else if (requiredUnit.equals("g") && COUNT_UNITS.contains(availableUnit)) {
+                return (availableQty * 50.0) >= requiredQty;
+            }
+        }
+
         if (!areUnitsCompatible(requiredUnit, availableUnit)) {
             return false;
         }
@@ -230,8 +354,8 @@ public class RecipeMatchingService {
         if (normalized.equals("teaspoons") || normalized.equals("teaspoon") || normalized.equals("tsp")) {
             return "tsp";
         }
-        if (normalized.equals("pcs") || normalized.equals("pc") || normalized.equals("piece") || normalized.equals("pieces") || normalized.equals("count") || normalized.equals("whole") || normalized.equals("egg") || normalized.equals("eggs") || normalized.equals("slice") || normalized.equals("slices") || normalized.equals("clove") || normalized.equals("cloves") || normalized.equals("bunch") || normalized.equals("bunches")) {
-            return normalized;
+        if (COUNT_UNITS.contains(normalized)) {
+            return "pcs";
         }
         return normalized;
     }

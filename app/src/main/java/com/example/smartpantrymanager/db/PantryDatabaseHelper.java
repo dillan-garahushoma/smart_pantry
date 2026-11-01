@@ -75,6 +75,15 @@ public class PantryDatabaseHelper extends SQLiteOpenHelper {
         seedRecipesIfNeeded(db);
     }
 
+    public void reseedRecipes() {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_RECIPE_INGREDIENTS, null, null);
+        db.delete(TABLE_RECIPES, null, null);
+        for (Recipe recipe : buildSeedRecipes()) {
+            insertRecipe(db, recipe);
+        }
+    }
+
     private void seedRecipesIfNeeded(SQLiteDatabase db) {
         if (countRecipes(db) > 0) {
             return;

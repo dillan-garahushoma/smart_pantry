@@ -1,13 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base System Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="forest_green">#2D6A4F</color>
-    <color name="cream">#F9F8F3</color>
-    <color name="charcoal">#242B2E</color>
-    <color name="amber">#E07A5F</color>
-    <color name="soft_red">#D9383A</color>
-    <color name="sage_green">#52B788</color>
-    <color name="light_gray">#E2E8F0</color>
+
+    <!-- Primary Teal Brand Palette -->
+    <color name="teal_primary">#0D9488</color>
+    <color name="teal_primary_dark">#0F766E</color>
+    <color name="teal_darkest">#115E59</color>
+    <color name="teal_light_bg">#F0FDFA</color>
+    <color name="teal_container">#CCFBF1</color>
+    <color name="teal_on_container">#134E4A</color>
+
+    <!-- Aliases for backwards compatibility -->
+    <color name="primary">#0D9488</color>
+    <color name="primary_container">#CCFBF1</color>
+    <color name="forest_green">#0F766E</color>
+    <color name="sage_green">#0D9488</color>
+
+    <!-- Secondary / Accent / Status Colors -->
+    <color name="accent_amber">#D97706</color>
+    <color name="accent_amber_bg">#FEF3C7</color>
+    <color name="amber">#D97706</color>
+
+    <color name="status_fresh_bg">#D1FAE5</color>
+    <color name="status_fresh_text">#065F46</color>
+
+    <color name="status_expiring_bg">#FEF3C7</color>
+    <color name="status_expiring_text">#92400E</color>
+
+    <color name="status_expired_bg">#FEE2E2</color>
+    <color name="status_expired_text">#991B1B</color>
+    <color name="soft_red">#DC2626</color>
+
+    <!-- Surfaces & Neutrals (Modern Slate Canvas) -->
+    <color name="app_background">#F8FAFC</color>
+    <color name="cream">#F8FAFC</color>
     <color name="card_background">#FFFFFF</color>
+    <color name="card_surface">#FFFFFF</color>
+
+    <!-- Typography Colors -->
+    <color name="text_primary">#0F172A</color>
+    <color name="charcoal">#0F172A</color>
+    <color name="text_secondary">#334155</color>
+    <color name="text_muted">#64748B</color>
+
+    <!-- Borders & Dividers -->
+    <color name="border_subtle">#E2E8F0</color>
+    <color name="light_gray">#E2E8F0</color>
 </resources>

@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private PantryDatabaseHelper dbHelper;
     private PantryAdapter pantryAdapter;
     private RecyclerView pantryRecyclerView;
+    private View emptyPantryContainer;
     private TextView emptyPantryView;
     private TextView totalItemsCountText;
     private TextView expiringCountText;
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
 
     private String currentSort = "name";
+
+    private Button btnViewSuggestedRecipes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,12 +60,13 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         pantryRecyclerView = findViewById(R.id.pantryRecyclerView);
+        emptyPantryContainer = findViewById(R.id.emptyPantryContainer);
         emptyPantryView = findViewById(R.id.emptyPantryView);
         totalItemsCountText = findViewById(R.id.totalItemsCountText);
         expiringCountText = findViewById(R.id.expiringCountText);
         searchInput = findViewById(R.id.searchInput);
         sortSpinner = findViewById(R.id.sortSpinner);
-        Button btnViewSuggestedRecipes = findViewById(R.id.btnViewSuggestedRecipes);
+        btnViewSuggestedRecipes = findViewById(R.id.btnViewSuggestedRecipes);
         FloatingActionButton fabAddIngredient = findViewById(R.id.fabAddIngredient);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
@@ -179,6 +183,17 @@ public class MainActivity extends AppCompatActivity {
         List<PantryItem> allItems = dbHelper.getAllPantryItems();
         totalItemsCountText.setText(allItems.size() + (allItems.size() == 1 ? " Item" : " Items"));
 
+        // Check ready-to-cook recipes for hero button
+        if (btnViewSuggestedRecipes != null) {
+            List<com.example.smartpantrymanager.model.Recipe> eligible =
+                    com.example.smartpantrymanager.service.RecipeMatchingService.getEligibleRecipes(dbHelper.getAllRecipes(), allItems);
+            if (!eligible.isEmpty()) {
+                btnViewSuggestedRecipes.setText("✨ " + eligible.size() + (eligible.size() == 1 ? " Recipe" : " Recipes") + " Ready to Cook!");
+            } else {
+                btnViewSuggestedRecipes.setText("✨ Explore Recipes & Suggestions");
+            }
+        }
+
         int expiringCount = 0;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         Date now = new Date();
@@ -201,14 +216,20 @@ public class MainActivity extends AppCompatActivity {
         expiringCountText.setText(expiringCount + " Expiring");
 
         if (items.isEmpty()) {
+            if (emptyPantryContainer != null) {
+                emptyPantryContainer.setVisibility(View.VISIBLE);
+            }
             emptyPantryView.setVisibility(View.VISIBLE);
             pantryRecyclerView.setVisibility(View.GONE);
             if (!query.isEmpty()) {
                 emptyPantryView.setText("No ingredients matching \"" + query + "\" found.\nTry a different search keyword.");
             } else {
-                emptyPantryView.setText("Your pantry is currently empty.\n\nTap '+ Add Ingredient' to start tracking what you have!");
+                emptyPantryView.setText("Your pantry is currently empty.\nTap the '+' button below to add your first ingredient!");
             }
         } else {
+            if (emptyPantryContainer != null) {
+                emptyPantryContainer.setVisibility(View.GONE);
+            }
             emptyPantryView.setVisibility(View.GONE);
             pantryRecyclerView.setVisibility(View.VISIBLE);
         }

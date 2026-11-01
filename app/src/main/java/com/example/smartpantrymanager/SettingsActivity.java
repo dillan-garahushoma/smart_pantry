@@ -69,11 +69,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         reloadRecipesButton.setOnClickListener(v -> {
             PantryDatabaseHelper dbHelper = new PantryDatabaseHelper(this);
-            dbHelper.seedRecipesIfNeeded();
-            Toast.makeText(this, "Recipe collection reloaded.", Toast.LENGTH_SHORT).show();
+            dbHelper.reseedRecipes();
+            Toast.makeText(this, "19 Seeded recipes reloaded successfully!", Toast.LENGTH_SHORT).show();
         });
 
-        appInfoText.setText("Smart Pantry Manager\nVersion 1.0\nSQLite-backed pantry and recipe matching.");
+        appInfoText.setText("Smart Pantry Manager\nVersion 1.0\nModern Teal Design System\nSQLite-backed pantry & strict recipe matching engine.");
     }
 
     @Override
